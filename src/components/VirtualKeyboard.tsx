@@ -5,7 +5,7 @@ interface VirtualKeyboardProps {
   expectedKey: string | null;    // Next key the user should press
 }
 
-// Keyboard key definition matrix
+// Keyboard key definition matrix (letters don't have shiftLabel to keep them centered and clean)
 const KEYBOARD_ROWS = [
   [
     { code: 'Backquote', label: '`', shiftLabel: '~', size: 'w-8 md:w-9' },
@@ -25,44 +25,44 @@ const KEYBOARD_ROWS = [
   ],
   [
     { code: 'Tab', label: 'Tab', size: 'w-11 md:w-12' },
-    { code: 'KeyQ', label: 'q', shiftLabel: 'Q', size: 'w-8 md:w-9' },
-    { code: 'KeyW', label: 'w', shiftLabel: 'W', size: 'w-8 md:w-9' },
-    { code: 'KeyE', label: 'e', shiftLabel: 'E', size: 'w-8 md:w-9' },
-    { code: 'KeyR', label: 'r', shiftLabel: 'R', size: 'w-8 md:w-9' },
-    { code: 'KeyT', label: 't', shiftLabel: 'T', size: 'w-8 md:w-9' },
-    { code: 'KeyY', label: 'y', shiftLabel: 'Y', size: 'w-8 md:w-9' },
-    { code: 'KeyU', label: 'u', shiftLabel: 'U', size: 'w-8 md:w-9' },
-    { code: 'KeyI', label: 'i', shiftLabel: 'I', size: 'w-8 md:w-9' },
-    { code: 'KeyO', label: 'o', shiftLabel: 'O', size: 'w-8 md:w-9' },
-    { code: 'KeyP', label: 'p', shiftLabel: 'P', size: 'w-8 md:w-9' },
+    { code: 'KeyQ', label: 'q', size: 'w-8 md:w-9' },
+    { code: 'KeyW', label: 'w', size: 'w-8 md:w-9' },
+    { code: 'KeyE', label: 'e', size: 'w-8 md:w-9' },
+    { code: 'KeyR', label: 'r', size: 'w-8 md:w-9' },
+    { code: 'KeyT', label: 't', size: 'w-8 md:w-9' },
+    { code: 'KeyY', label: 'y', size: 'w-8 md:w-9' },
+    { code: 'KeyU', label: 'u', size: 'w-8 md:w-9' },
+    { code: 'KeyI', label: 'i', size: 'w-8 md:w-9' },
+    { code: 'KeyO', label: 'o', size: 'w-8 md:w-9' },
+    { code: 'KeyP', label: 'p', size: 'w-8 md:w-9' },
     { code: 'BracketLeft', label: '[', shiftLabel: '{', size: 'w-8 md:w-9' },
     { code: 'BracketRight', label: ']', shiftLabel: '}', size: 'w-8 md:w-9' },
     { code: 'Backslash', label: '\\', shiftLabel: '|', size: 'w-8 md:w-9 flex-grow' }
   ],
   [
     { code: 'CapsLock', label: 'Caps', size: 'w-13 md:w-14' },
-    { code: 'KeyA', label: 'a', shiftLabel: 'A', size: 'w-8 md:w-9' },
-    { code: 'KeyS', label: 's', shiftLabel: 'S', size: 'w-8 md:w-9' },
-    { code: 'KeyD', label: 'd', shiftLabel: 'D', size: 'w-8 md:w-9' },
-    { code: 'KeyF', label: 'f', shiftLabel: 'F', size: 'w-8 md:w-9' },
-    { code: 'KeyG', label: 'g', shiftLabel: 'G', size: 'w-8 md:w-9' },
-    { code: 'KeyH', label: 'h', shiftLabel: 'H', size: 'w-8 md:w-9' },
-    { code: 'KeyJ', label: 'j', shiftLabel: 'J', size: 'w-8 md:w-9' },
-    { code: 'KeyK', label: 'k', shiftLabel: 'K', size: 'w-8 md:w-9' },
-    { code: 'KeyL', label: 'l', shiftLabel: 'L', size: 'w-8 md:w-9' },
+    { code: 'KeyA', label: 'a', size: 'w-8 md:w-9' },
+    { code: 'KeyS', label: 's', size: 'w-8 md:w-9' },
+    { code: 'KeyD', label: 'd', size: 'w-8 md:w-9' },
+    { code: 'KeyF', label: 'f', size: 'w-8 md:w-9' },
+    { code: 'KeyG', label: 'g', size: 'w-8 md:w-9' },
+    { code: 'KeyH', label: 'h', size: 'w-8 md:w-9' },
+    { code: 'KeyJ', label: 'j', size: 'w-8 md:w-9' },
+    { code: 'KeyK', label: 'k', size: 'w-8 md:w-9' },
+    { code: 'KeyL', label: 'l', size: 'w-8 md:w-9' },
     { code: 'Semicolon', label: ';', shiftLabel: ':', size: 'w-8 md:w-9' },
     { code: 'Quote', label: "'", shiftLabel: '"', size: 'w-8 md:w-9' },
     { code: 'Enter', label: 'Enter', size: 'w-16 md:w-18 flex-grow' }
   ],
   [
     { code: 'ShiftLeft', label: 'Shift', size: 'w-16 md:w-18' },
-    { code: 'KeyZ', label: 'z', shiftLabel: 'Z', size: 'w-8 md:w-9' },
-    { code: 'KeyX', label: 'x', shiftLabel: 'X', size: 'w-8 md:w-9' },
-    { code: 'KeyC', label: 'c', shiftLabel: 'C', size: 'w-8 md:w-9' },
-    { code: 'KeyV', label: 'v', shiftLabel: 'V', size: 'w-8 md:w-9' },
-    { code: 'KeyB', label: 'b', shiftLabel: 'B', size: 'w-8 md:w-9' },
-    { code: 'KeyN', label: 'n', shiftLabel: 'N', size: 'w-8 md:w-9' },
-    { code: 'KeyM', label: 'm', shiftLabel: 'M', size: 'w-8 md:w-9' },
+    { code: 'KeyZ', label: 'z', size: 'w-8 md:w-9' },
+    { code: 'KeyX', label: 'x', size: 'w-8 md:w-9' },
+    { code: 'KeyC', label: 'c', size: 'w-8 md:w-9' },
+    { code: 'KeyV', label: 'v', size: 'w-8 md:w-9' },
+    { code: 'KeyB', label: 'b', size: 'w-8 md:w-9' },
+    { code: 'KeyN', label: 'n', size: 'w-8 md:w-9' },
+    { code: 'KeyM', label: 'm', size: 'w-8 md:w-9' },
     { code: 'Comma', label: ',', shiftLabel: '<', size: 'w-8 md:w-9' },
     { code: 'Period', label: '.', shiftLabel: '>', size: 'w-8 md:w-9' },
     { code: 'Slash', label: '/', shiftLabel: '?', size: 'w-8 md:w-9' },
@@ -272,11 +272,11 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({ activeKey, exp
 
     if (key.label === 'f' || key.label === 'j') {
       return (
-        <div className="flex flex-col items-center gap-0.5 pt-0.5">
+        <div className="flex flex-col items-center justify-center h-full pt-1.5 gap-0.5">
           <span className="leading-none uppercase font-black tracking-wider text-[8.5px] md:text-[10px]">
             {key.label}
           </span>
-          <div className={`w-4 h-[2px] rounded-full ${active ? 'bg-purple-200' : 'bg-gray-500'}`} />
+          <div className={`w-3.5 h-[2px] rounded-full ${active ? 'bg-purple-200' : 'bg-gray-500'}`} />
         </div>
       );
     }
