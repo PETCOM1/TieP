@@ -29,3 +29,11 @@ export interface TestResult {
   timestamp: string;
   refId?: string; // ID of the lesson if mode === 'lesson'
 }
+
+export interface GameResult {
+  id: string;
+  game: 'wordfall' | 'invaders';
+  score: number;
+  accuracy: number;
+  timestamp: string;
+}

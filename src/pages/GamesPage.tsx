@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playClickSound } from '../utils/audio';
+import { statsService } from '../services/statsService';
+import type { GameResult } from '../types';
 import { 
   Play, RotateCcw, Heart, ShieldAlert, Star, Trophy, Target, HelpCircle, 
-  Gamepad2, Rocket, Zap, Crosshair
+  Gamepad2, Rocket, Zap, Crosshair, Award, Calendar, Globe
 } from 'lucide-react';
 
 const GAME_WORDS = [
@@ -44,8 +46,39 @@ interface Particle {
 const HIGH_SCORE_KEY = 'tiepit_game_highscore';
 const INVADERS_HIGH_SCORE_KEY = 'tiepit_invaders_highscore';
 
+const MOCK_GLOBAL_LEADERBOARD = {
+  wordfall: [
+    { rank: 1, name: "SpeedyFingers", score: 145, accuracy: 99, country: "US", avatar: "⚡", isUser: false },
+    { rank: 2, name: "ChromaKey", score: 132, accuracy: 98, country: "CA", avatar: "🎨", isUser: false },
+    { rank: 3, name: "TypingTornado", score: 118, accuracy: 97, country: "UK", avatar: "🌪️", isUser: false },
+    { rank: 4, name: "WPM_God", score: 105, accuracy: 96, country: "DE", avatar: "👑", isUser: false },
+    { rank: 5, name: "CtrlAltDefeat", score: 94, accuracy: 95, country: "JP", avatar: "⌨️", isUser: false },
+    { rank: 6, name: "LaserBlaster", score: 87, accuracy: 94, country: "FR", avatar: "👾", isUser: false },
+    { rank: 7, name: "SpaceCadet", score: 79, accuracy: 93, country: "AU", avatar: "🚀", isUser: false },
+    { rank: 8, name: "WordSmith", score: 72, accuracy: 92, country: "ZA", avatar: "✍️", isUser: false },
+    { rank: 9, name: "ShiftHappens", score: 65, accuracy: 91, country: "BR", avatar: "⚙️", isUser: false },
+    { rank: 10, name: "KeyboardCat", score: 58, accuracy: 90, country: "MX", avatar: "🐱", isUser: false }
+  ],
+  invaders: [
+    { rank: 1, name: "SpaceInvader_99", score: 110, accuracy: 98, country: "KR", avatar: "🛸", isUser: false },
+    { rank: 2, name: "LaserMaster", score: 98, accuracy: 97, country: "US", avatar: "💥", isUser: false },
+    { rank: 3, name: "CosmicTypist", score: 91, accuracy: 96, country: "UK", avatar: "🌌", isUser: false },
+    { rank: 4, name: "ShieldDefender", score: 85, accuracy: 95, country: "DE", avatar: "🛡️", isUser: false },
+    { rank: 5, name: "WarpSpeed", score: 78, accuracy: 94, country: "CA", avatar: "🌠", isUser: false },
+    { rank: 6, name: "NebulaNerd", score: 72, accuracy: 93, country: "JP", avatar: "🪐", isUser: false },
+    { rank: 7, name: "StarDust", score: 66, accuracy: 92, country: "ZA", avatar: "⭐", isUser: false },
+    { rank: 8, name: "GalacticKeys", score: 60, accuracy: 91, country: "FR", avatar: "🛰️", isUser: false },
+    { rank: 9, name: "PhotonBeast", score: 54, accuracy: 90, country: "IN", avatar: "🔥", isUser: false },
+    { rank: 10, name: "OrbitKnight", score: 48, accuracy: 89, country: "NZ", avatar: "⚔️", isUser: false }
+  ]
+};
+
 export const GamesPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'wordfall' | 'invaders'>('wordfall');
+
+  // SCOREBOARD STATE
+  const [scoreHistory, setScoreHistory] = useState<GameResult[]>([]);
+  const [scoreboardTab, setScoreboardTab] = useState<'leaderboard' | 'recent' | 'global'>('leaderboard');
 
   // WORD FALL GAME STATE
   const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
@@ -101,6 +134,11 @@ export const GamesPage: React.FC = () => {
   useEffect(() => {
     invGameStateRef.current = invGameState;
   }, [invGameState]);
+
+  // Load scoreboard history on mount, tab changes, and gameover
+  useEffect(() => {
+    setScoreHistory(statsService.getGameHistory());
+  }, [activeTab, gameState, invGameState]);
 
   // Clean up all loops when switching tabs
   useEffect(() => {
@@ -170,6 +208,11 @@ export const GamesPage: React.FC = () => {
       setHighScore(currentScore);
       localStorage.setItem(HIGH_SCORE_KEY, currentScore.toString());
     }
+
+    const finalAccuracy = totalKeysPressed.current > 0
+      ? Math.round((correctKeysPressed.current / totalKeysPressed.current) * 100)
+      : 100;
+    statsService.saveGameResult('wordfall', currentScore, finalAccuracy);
   }, [highScore]);
 
   // Word fall game loop (tick)
@@ -336,6 +379,11 @@ export const GamesPage: React.FC = () => {
       setInvHighScore(currentScore);
       localStorage.setItem(INVADERS_HIGH_SCORE_KEY, currentScore.toString());
     }
+
+    const finalAccuracy = invTotalKeys.current > 0
+      ? Math.round((invCorrectKeys.current / invTotalKeys.current) * 100)
+      : 100;
+    statsService.saveGameResult('invaders', currentScore, finalAccuracy);
   }, [invHighScore]);
 
   // Invaders game loop (tick)
@@ -550,6 +598,55 @@ export const GamesPage: React.FC = () => {
   const invAccuracy = invTotalKeys.current > 0
     ? Math.round((invCorrectKeys.current / invTotalKeys.current) * 100)
     : 100;
+
+  const displayedHistory = scoreHistory
+    .filter((r) => r.game === activeTab)
+    .sort((a, b) => {
+      if (scoreboardTab === 'leaderboard') {
+        if (b.score !== a.score) return b.score - a.score;
+        return b.accuracy - a.accuracy;
+      } else {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      }
+    })
+    .slice(0, 10);
+
+  // Define mock global leaderboard list and calculate user's dynamic global rank position
+  const currentHighScore = activeTab === 'wordfall' ? highScore : invHighScore;
+  const globalList = MOCK_GLOBAL_LEADERBOARD[activeTab];
+  
+  let userRank = -1;
+  for (let i = 0; i < globalList.length; i++) {
+    if (currentHighScore > globalList[i].score) {
+      userRank = i + 1;
+      break;
+    }
+  }
+  if (userRank === -1 && currentHighScore > 0) {
+    userRank = globalList.length + 1;
+  }
+
+  let displayedGlobalList = [...globalList];
+  if (userRank !== -1 && userRank <= 10 && currentHighScore > 0) {
+    const userAccuracy = activeTab === 'wordfall' ? 
+      (scoreHistory.filter(r => r.game === 'wordfall').sort((a,b) => b.score - a.score)[0]?.accuracy || 100) :
+      (scoreHistory.filter(r => r.game === 'invaders').sort((a,b) => b.score - a.score)[0]?.accuracy || 100);
+      
+    displayedGlobalList.splice(userRank - 1, 0, {
+      rank: userRank,
+      name: "You (Local High)",
+      score: currentHighScore,
+      accuracy: userAccuracy,
+      country: "LOCAL",
+      avatar: "👤",
+      isUser: true
+    });
+    // Re-adjust ranks below
+    for (let i = userRank; i < displayedGlobalList.length; i++) {
+      displayedGlobalList[i].rank = i + 1;
+    }
+    displayedGlobalList = displayedGlobalList.slice(0, 10);
+  }
 
   return (
     <div className="max-w-4xl mx-auto py-4 space-y-6 flex flex-col justify-start min-h-[75svh]">
@@ -949,6 +1046,216 @@ export const GamesPage: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Scoreboard / Leaderboard section */}
+      <div className="bg-gray-900/30 border border-gray-850 rounded-2xl p-6 backdrop-blur-md shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <Award className="w-5 h-5 text-purple-400" />
+            <div>
+              <h3 className="text-base font-extrabold text-white">Scoreboard</h3>
+              <p className="text-gray-400 text-[11px] font-medium mt-0.5">
+                Track your top scores and recent game performance.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex bg-gray-950 p-1 rounded-xl border border-gray-850 self-start sm:self-auto">
+            <button
+              onClick={() => setScoreboardTab('leaderboard')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                scoreboardTab === 'leaderboard'
+                  ? 'bg-purple-600/20 border border-purple-500/30 text-purple-200'
+                  : 'text-gray-400 hover:text-gray-200 border border-transparent'
+              }`}
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              Leaderboard
+            </button>
+            <button
+              onClick={() => setScoreboardTab('recent')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                scoreboardTab === 'recent'
+                  ? 'bg-purple-600/20 border border-purple-500/30 text-purple-200'
+                  : 'text-gray-400 hover:text-gray-200 border border-transparent'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              Recent Runs
+            </button>
+            <button
+              onClick={() => setScoreboardTab('global')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                scoreboardTab === 'global'
+                  ? 'bg-purple-600/20 border border-purple-500/30 text-purple-200'
+                  : 'text-gray-400 hover:text-gray-200 border border-transparent'
+              }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              Global Arena
+            </button>
+          </div>
+        </div>
+
+        {/* List of scores */}
+        <div className="overflow-hidden space-y-4">
+          {scoreboardTab === 'global' && (
+            <div className="flex flex-col sm:flex-row items-center gap-3 p-3 rounded-xl bg-purple-950/20 border border-purple-500/10 text-xs text-purple-300">
+              <Globe className="w-4 h-4 text-purple-400 shrink-0" />
+              <div className="flex-1 text-center sm:text-left">
+                <span className="font-extrabold text-white">Competition Mode:</span> Real-time global leaderboards will be integrated soon with Google Authentication. Practice hard to claim the #1 spot!
+              </div>
+              <div className="px-2.5 py-1 rounded bg-purple-500/20 text-purple-200 font-extrabold uppercase text-[9px] tracking-wider shrink-0 select-none">
+                Coming Soon
+              </div>
+            </div>
+          )}
+
+          {scoreboardTab === 'global' ? (
+            <div className="space-y-2.5">
+              {displayedGlobalList.map((item) => {
+                const rankNum = item.rank;
+                let rankBadge = (
+                  <span className="text-xs font-bold text-gray-500 w-6 text-center">
+                    #{rankNum}
+                  </span>
+                );
+                if (rankNum === 1) rankBadge = <span className="text-lg w-6 text-center select-none">🥇</span>;
+                else if (rankNum === 2) rankBadge = <span className="text-lg w-6 text-center select-none">🥈</span>;
+                else if (rankNum === 3) rankBadge = <span className="text-lg w-6 text-center select-none">🥉</span>;
+
+                return (
+                  <div
+                    key={item.name}
+                    className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 group ${
+                      item.isUser
+                        ? 'bg-purple-950/45 border-purple-500/50 shadow-lg shadow-purple-500/5'
+                        : 'bg-gray-950/40 border-gray-850/60 hover:border-gray-800 hover:bg-gray-950/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {rankBadge}
+                      <span className="text-base select-none">{item.avatar}</span>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                        <span className={`text-sm font-bold transition-colors ${item.isUser ? 'text-purple-300 font-extrabold' : 'text-white group-hover:text-purple-300'}`}>
+                          {item.name} {item.isUser && <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-black ml-1 uppercase">You</span>}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-semibold">
+                          <Target className="w-3 h-3 text-indigo-500" />
+                          <span>{item.accuracy}% Accuracy</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-black text-white">
+                        {item.score} <span className="text-[10px] text-gray-500 font-semibold uppercase">{activeTab === 'wordfall' ? 'pts' : 'destroyed'}</span>
+                      </span>
+                      <span className="text-[10px] text-gray-650 font-bold uppercase select-none w-6 text-right">
+                        {item.country}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Show player rank if they are outside top 10 */}
+              {userRank > 10 && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-purple-950/45 border border-purple-500/50 shadow-lg shadow-purple-500/5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-black text-purple-400 w-6 text-center">
+                      #{userRank}
+                    </span>
+                    <span className="text-base select-none">👤</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                      <span className="text-sm font-black text-purple-300">
+                        You (Local High) <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-black ml-1 uppercase">Outside Top 10</span>
+                      </span>
+                      <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-semibold">
+                        <Target className="w-3 h-3 text-indigo-500" />
+                        <span>
+                          {activeTab === 'wordfall' ? 
+                            (scoreHistory.filter(r => r.game === 'wordfall').sort((a,b) => b.score - a.score)[0]?.accuracy || 100) :
+                            (scoreHistory.filter(r => r.game === 'invaders').sort((a,b) => b.score - a.score)[0]?.accuracy || 100)}% Accuracy
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-black text-white">
+                      {currentHighScore} <span className="text-[10px] text-gray-500 font-semibold uppercase">{activeTab === 'wordfall' ? 'pts' : 'destroyed'}</span>
+                    </span>
+                    <span className="text-[10px] text-gray-650 font-bold uppercase select-none w-6 text-right">
+                      LOCAL
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            displayedHistory.length === 0 ? (
+              <div className="py-10 text-center space-y-2 border border-dashed border-gray-800 rounded-xl bg-gray-950/20">
+                <Gamepad2 className="w-8 h-8 text-gray-600 mx-auto opacity-40 animate-pulse" />
+                <p className="text-gray-400 text-xs font-semibold">No runs recorded yet</p>
+                <p className="text-gray-500 text-[10px] max-w-[200px] mx-auto leading-relaxed">
+                  Play a session of {activeTab === 'wordfall' ? 'Word Fall' : 'Laser Invader'} to submit your score!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {displayedHistory.map((item, index) => {
+                  const isLeaderboard = scoreboardTab === 'leaderboard';
+                  const rankNum = index + 1;
+                  
+                  // Format rank indicator
+                  let rankBadge = (
+                    <span className="text-xs font-bold text-gray-500 w-6 text-center">
+                      #{rankNum}
+                    </span>
+                  );
+                  if (isLeaderboard) {
+                    if (rankNum === 1) rankBadge = <span className="text-lg w-6 text-center select-none">🥇</span>;
+                    else if (rankNum === 2) rankBadge = <span className="text-lg w-6 text-center select-none">🥈</span>;
+                    else if (rankNum === 3) rankBadge = <span className="text-lg w-6 text-center select-none">🥉</span>;
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-3 rounded-xl bg-gray-950/40 border border-gray-850/60 hover:border-gray-800 hover:bg-gray-950/60 transition-all duration-200 group"
+                    >
+                      <div className="flex items-center gap-3">
+                        {rankBadge}
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                          <span className="text-sm font-black text-white group-hover:text-purple-300 transition-colors">
+                            {item.score} <span className="text-[10px] text-gray-500 font-semibold uppercase">{activeTab === 'wordfall' ? 'pts' : 'destroyed'}</span>
+                          </span>
+                          <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-semibold">
+                            <Target className="w-3 h-3 text-indigo-500" />
+                            <span>{item.accuracy}% Accuracy</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-gray-550 font-medium">
+                          {new Date(item.timestamp).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
+        </div>
+      </div>
 
       {/* Tip Box */}
       <div className="flex items-center justify-center gap-2 text-xs text-gray-500">

@@ -1,8 +1,9 @@
-import type { TypingStats, TestResult } from '../types';
+import type { TypingStats, TestResult, GameResult } from '../types';
 
 const STATS_KEY = 'tiepit_stats';
 const HISTORY_KEY = 'tiepit_history';
 const STREAK_KEY = 'tiepit_streak';
+const GAME_HISTORY_KEY = 'tiepit_game_history';
 
 const DEFAULT_STATS: TypingStats = {
   bestWpm: 0,
@@ -156,10 +157,47 @@ export const statsService = {
     return newResult;
   },
 
+  getGameHistory(): GameResult[] {
+    const data = localStorage.getItem(GAME_HISTORY_KEY);
+    if (!data) return [];
+    try {
+      const parsed = JSON.parse(data) as GameResult[];
+      return parsed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    } catch {
+      return [];
+    }
+  },
+
+  getGameLeaderboard(game: 'wordfall' | 'invaders'): GameResult[] {
+    const history = this.getGameHistory();
+    return history
+      .filter((r) => r.game === game)
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return b.accuracy - a.accuracy;
+      })
+      .slice(0, 10);
+  },
+
+  saveGameResult(game: 'wordfall' | 'invaders', score: number, accuracy: number): GameResult {
+    const history = this.getGameHistory();
+    const newResult: GameResult = {
+      id: Math.random().toString(36).substring(2, 11),
+      game,
+      score,
+      accuracy,
+      timestamp: new Date().toISOString()
+    };
+    history.push(newResult);
+    localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
+    return newResult;
+  },
+
   resetStats(): void {
     localStorage.setItem(STATS_KEY, JSON.stringify(DEFAULT_STATS));
     localStorage.setItem(HISTORY_KEY, JSON.stringify([]));
     localStorage.removeItem(STREAK_KEY);
+    localStorage.removeItem(GAME_HISTORY_KEY);
     
     // Clean daily challenges
     const keys = Object.keys(localStorage);
