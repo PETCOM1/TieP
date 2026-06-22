@@ -270,6 +270,17 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({ activeKey, exp
       );
     }
 
+    if (key.label === 'f' || key.label === 'j') {
+      return (
+        <div className="flex flex-col items-center gap-0.5 pt-0.5">
+          <span className="leading-none uppercase font-black tracking-wider text-[8.5px] md:text-[10px]">
+            {key.label}
+          </span>
+          <div className={`w-3 h-[1.5px] rounded-full ${active ? 'bg-purple-200' : 'bg-gray-650'}`} />
+        </div>
+      );
+    }
+
     return (
       <span className="leading-none uppercase font-black tracking-wider text-[8.5px] md:text-[10px]">
         {key.label}
