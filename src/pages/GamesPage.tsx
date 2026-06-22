@@ -44,6 +44,12 @@ export const GamesPage: React.FC = () => {
   const targetIdRef = useRef(targetId);
   targetIdRef.current = targetId;
 
+  // Use ref to avoid stale closure bug on gameState in timeouts
+  const gameStateRef = useRef(gameState);
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
+
   // Generate a random word
   const spawnWord = useCallback(() => {
     const randomText = GAME_WORDS[Math.floor(Math.random() * GAME_WORDS.length)];
@@ -62,14 +68,15 @@ export const GamesPage: React.FC = () => {
     const interval = Math.max(700, 2200 - currentScore * 45);
     
     if (spawnTimerRef.current) clearTimeout(spawnTimerRef.current);
-    if (gameState === 'playing') {
+    if (gameStateRef.current === 'playing') {
       spawnTimerRef.current = setTimeout(spawnWord, interval);
     }
-  }, [gameState]);
+  }, []);
 
   // Start the game loops
   const startGame = () => {
     setGameState('playing');
+    gameStateRef.current = 'playing';
     setWords([]);
     setScore(0);
     setLives(3);
@@ -84,6 +91,7 @@ export const GamesPage: React.FC = () => {
 
   const handleGameOver = useCallback(() => {
     setGameState('gameover');
+    gameStateRef.current = 'gameover';
     if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
     if (spawnTimerRef.current) clearTimeout(spawnTimerRef.current);
 
