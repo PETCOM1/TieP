@@ -4,7 +4,7 @@ import { Keyboard, LayoutDashboard, BookOpen, Award, Play, Gamepad2 } from 'luci
 
 export const MainLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#070b13] text-gray-100 font-sans flex flex-col relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#070b13] text-gray-100 font-sans flex flex-col relative">
       {/* Background blur effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-950/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-950/20 blur-[120px] pointer-events-none" />
