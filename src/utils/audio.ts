@@ -17,12 +17,76 @@ const getAudioContext = (): AudioContext | null => {
   return audioCtx;
 };
 
-export const playClickSound = (type: 'click' | 'error' | 'backspace'): void => {
+export const playClickSound = (type: 'click' | 'error' | 'backspace' | 'laser' | 'explosion'): void => {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     const now = ctx.currentTime;
+
+    if (type === 'laser') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(450, now);
+      osc.frequency.exponentialRampToValueAtTime(1500, now + 0.15);
+      
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      
+      osc.start(now);
+      osc.stop(now + 0.15);
+      return;
+    }
+
+    if (type === 'explosion') {
+      // Noise burst for explosion rumble
+      const bufferSize = ctx.sampleRate * 0.25;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noiseSource = ctx.createBufferSource();
+      noiseSource.buffer = buffer;
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 350;
+      filter.Q.value = 1.0;
+
+      const noiseGain = ctx.createGain();
+      noiseSource.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(ctx.destination);
+
+      noiseGain.gain.setValueAtTime(0.12, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+      // Low frequency pitch drop
+      const osc = ctx.createOscillator();
+      const oscGain = ctx.createGain();
+      osc.connect(oscGain);
+      oscGain.connect(ctx.destination);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.linearRampToValueAtTime(30, now + 0.22);
+
+      oscGain.gain.setValueAtTime(0.18, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+      noiseSource.start(now);
+      noiseSource.stop(now + 0.25);
+      
+      osc.start(now);
+      osc.stop(now + 0.22);
+      return;
+    }
 
     if (type === 'error') {
       // Lower-pitched thud indicating mistake

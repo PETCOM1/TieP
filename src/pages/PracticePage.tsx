@@ -30,6 +30,7 @@ export const PracticePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const lessonId = searchParams.get('lesson');
+  const isDaily = searchParams.get('mode') === 'daily';
 
   const [lessonTitle, setLessonTitle] = useState<string | null>(null);
   const [targetText, setTargetText] = useState('');
@@ -38,7 +39,10 @@ export const PracticePage: React.FC = () => {
 
   // Initialize text based on lesson or practice mode
   useEffect(() => {
-    if (lessonId) {
+    if (isDaily) {
+      setTargetText(statsService.getDailyChallengeText());
+      setLessonTitle("Daily Typing Challenge");
+    } else if (lessonId) {
       const lessonObj = MOCK_LESSONS.find(l => l.id === lessonId);
       if (lessonObj) {
         setTargetText(lessonObj.text);
@@ -51,23 +55,34 @@ export const PracticePage: React.FC = () => {
       setTargetText(generatePracticeText(25));
       setLessonTitle(null);
     }
-  }, [lessonId]);
+  }, [lessonId, isDaily]);
 
   // Completion handler
   const handleComplete = (result: { wpm: number; accuracy: number; errors: number; timeTaken: number; charsTyped: number }) => {
     // Save to statistics
-    const saved = statsService.saveTestResult({
-      wpm: result.wpm,
-      accuracy: result.accuracy,
-      errors: result.errors,
-      charactersTyped: result.charsTyped,
-      timeTaken: result.timeTaken,
-      mode: lessonId ? 'lesson' : 'practice',
-      refId: lessonId || undefined
-    });
+    let saved;
+    if (isDaily) {
+      saved = statsService.completeDailyChallenge({
+        wpm: result.wpm,
+        accuracy: result.accuracy,
+        errors: result.errors,
+        charactersTyped: result.charsTyped,
+        timeTaken: result.timeTaken,
+      });
+    } else {
+      saved = statsService.saveTestResult({
+        wpm: result.wpm,
+        accuracy: result.accuracy,
+        errors: result.errors,
+        charactersTyped: result.charsTyped,
+        timeTaken: result.timeTaken,
+        mode: lessonId ? 'lesson' : 'practice',
+        refId: lessonId || undefined
+      });
+    }
 
     // Navigate to results
-    navigate('/results', { state: { result: saved } });
+    navigate('/results', { state: { result: saved, isDaily } });
   };
 
   const {
@@ -84,7 +99,10 @@ export const PracticePage: React.FC = () => {
   } = useTypingEngine(targetText, handleComplete, { isActive: isFocused });
 
   const handleRestart = () => {
-    if (lessonId) {
+    if (isDaily) {
+      reset();
+      setTargetText(statsService.getDailyChallengeText());
+    } else if (lessonId) {
       const lessonObj = MOCK_LESSONS.find(l => l.id === lessonId);
       if (lessonObj) {
         reset();

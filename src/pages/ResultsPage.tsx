@@ -11,6 +11,7 @@ export const ResultsPage: React.FC = () => {
   
   // Load result from location state or retrieve the last result in history
   const result: TestResult | undefined = location.state?.result || statsService.getHistory()[0];
+  const isDaily = location.state?.isDaily || false;
   const overallStats = statsService.getStats();
 
   if (!result) {
@@ -35,7 +36,9 @@ export const ResultsPage: React.FC = () => {
   const isPersonalBest = result.wpm >= overallStats.bestWpm && result.wpm > 0;
 
   const handleRetry = () => {
-    if (result.mode === 'lesson' && result.refId) {
+    if (isDaily) {
+      navigate('/practice?mode=daily');
+    } else if (result.mode === 'lesson' && result.refId) {
       navigate(`/practice?lesson=${result.refId}`);
     } else if (result.mode === 'test') {
       navigate('/test');
@@ -83,7 +86,7 @@ export const ResultsPage: React.FC = () => {
           </motion.h1>
           
           <motion.p variants={childVariants} className="text-gray-400 text-sm mt-1 capitalize">
-            Finished in {result.mode} mode
+            {isDaily ? 'Daily Challenge Mode' : `Finished in ${result.mode} mode`}
           </motion.p>
 
           {isPersonalBest && (
