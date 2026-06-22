@@ -7,6 +7,8 @@ import {
   Award, Zap, ShieldAlert, History, Clock, Target, Play, 
   Flame, Calendar, CheckCircle2, Lock, Download, Award as CertificateIcon, ArrowRight
 } from 'lucide-react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { TypingCertificate } from '../components/TypingCertificate';
 
 export const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<TypingStats>(statsService.getStats());
@@ -21,6 +23,13 @@ export const DashboardPage: React.FC = () => {
   // Certificate state
   const [fullName, setFullName] = useState('');
   const [certMessage, setCertMessage] = useState('');
+  const [isGenerated, setIsGenerated] = useState(false);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFullName(e.target.value);
+    setIsGenerated(false);
+    setCertMessage('');
+  };
 
   useEffect(() => {
     // Fresh reload from localStorage
@@ -80,162 +89,7 @@ export const DashboardPage: React.FC = () => {
   // Certificate eligibility criteria: WPM >= 30, Accuracy >= 90%
   const isEligibleForCertificate = stats.bestWpm >= 30 && stats.bestAccuracy >= 90;
 
-  const handleDownloadCertificate = () => {
-    if (!fullName.trim()) {
-      setCertMessage('Please enter your full name first!');
-      return;
-    }
-    setCertMessage('');
-
-    const canvas = document.createElement('canvas');
-    canvas.width = 800;
-    canvas.height = 600;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Background - Dark theme matching app style
-    const grad = ctx.createLinearGradient(0, 0, 800, 600);
-    grad.addColorStop(0, '#05070c');
-    grad.addColorStop(1, '#0e1220');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 800, 600);
-
-    // Outer Border Line
-    ctx.strokeStyle = '#4f46e5'; // Indigo-600
-    ctx.lineWidth = 10;
-    ctx.strokeRect(20, 20, 760, 560);
-
-    // Inner Amber Accent Border
-    ctx.strokeStyle = '#f59e0b'; // Amber-500
-    ctx.lineWidth = 2;
-    ctx.strokeRect(32, 32, 736, 536);
-
-    // Grid Background pattern (subtle tech theme)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)';
-    ctx.lineWidth = 1;
-    for (let x = 40; x < 760; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, 40);
-      ctx.lineTo(x, 560);
-      ctx.stroke();
-    }
-    for (let y = 40; y < 560; y += 40) {
-      ctx.beginPath();
-      ctx.moveTo(40, y);
-      ctx.lineTo(760, y);
-      ctx.stroke();
-    }
-
-    // Header Title
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 36px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('TIE PIT TYPING TUTOR', 400, 95);
-
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 15px sans-serif';
-    ctx.fillText('OFFICIAL CERTIFICATE OF TOUCH-TYPING PROFICIENCY', 400, 135);
-
-    // Decorative Divider
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(280, 155);
-    ctx.lineTo(520, 155);
-    ctx.stroke();
-
-    // Certificate Statement
-    ctx.fillStyle = '#94a3b8'; // Slate-400
-    ctx.font = 'italic 16px serif';
-    ctx.fillText('This certifies that the touch-typing proficiency of', 400, 210);
-
-    // Name (Main Highlight)
-    ctx.fillStyle = '#c084fc'; // Purple-400
-    ctx.font = '900 38px sans-serif';
-    ctx.fillText(fullName.toUpperCase().slice(0, 32), 400, 265);
-
-    // Underline
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.4)';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(220, 285);
-    ctx.lineTo(580, 285);
-    ctx.stroke();
-
-    // Description
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '14px sans-serif';
-    ctx.fillText('has been verified under standardized timing conditions with the following personal records:', 400, 330);
-
-    // Stats Cards
-    // WPM Box
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
-    ctx.strokeStyle = 'rgba(79, 70, 229, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(180, 360, 200, 95, 12);
-    else ctx.rect(180, 360, 200, 95);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('SPEED RECORD', 280, 390);
-    ctx.fillStyle = '#a855f7';
-    ctx.font = '900 32px sans-serif';
-    ctx.fillText(`${stats.bestWpm}`, 280, 430);
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('WPM', 320, 430);
-
-    // Accuracy Box
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
-    ctx.strokeStyle = 'rgba(79, 70, 229, 0.4)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(420, 360, 200, 95, 12);
-    else ctx.rect(420, 360, 200, 95);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.fillText('ACCURACY RECORD', 520, 390);
-    ctx.fillStyle = '#6366f1';
-    ctx.font = '900 32px sans-serif';
-    ctx.fillText(`${stats.bestAccuracy}%`, 520, 430);
-
-    // Footer/Date
-    ctx.fillStyle = '#64748b';
-    ctx.font = '12px sans-serif';
-    const dateStr = new Date().toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-    ctx.fillText(`Date: ${dateStr}`, 280, 515);
-    ctx.fillText('System Check: Local-First Storage Verified', 520, 515);
-
-    // Seal Badge
-    ctx.fillStyle = 'rgba(245, 158, 11, 0.08)';
-    ctx.beginPath();
-    ctx.arc(400, 510, 30, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = '900 11px sans-serif';
-    ctx.fillText('VERIFIED', 400, 514);
-
-    // Export image & trigger download
-    const image = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = `tiepit_certificate_${fullName.replace(/\s+/g, '_').toLowerCase()}.png`;
-    link.href = image;
-    link.click();
-  };
+  // Function replaced with inline client-side @react-pdf/renderer React component
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -470,7 +324,7 @@ export const DashboardPage: React.FC = () => {
                 <input 
                   type="text" 
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={handleNameChange}
                   placeholder="e.g. JOHN DOE" 
                   className="w-full bg-gray-950 border border-gray-850 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white font-semibold outline-none transition-all placeholder:text-gray-700 uppercase"
                 />
@@ -480,13 +334,47 @@ export const DashboardPage: React.FC = () => {
                 <p className="text-xs text-rose-400 font-bold">{certMessage}</p>
               )}
 
-              <button
-                onClick={handleDownloadCertificate}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold py-3 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10"
-              >
-                <Download className="w-4 h-4" />
-                Download Verified Certificate (PNG)
-              </button>
+              {!isGenerated ? (
+                <button
+                  onClick={() => {
+                    if (!fullName.trim()) {
+                      setCertMessage('Please enter your full name first!');
+                      return;
+                    }
+                    setIsGenerated(true);
+                    setCertMessage('');
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-purple-500/10 cursor-pointer"
+                >
+                  <CertificateIcon className="w-4 h-4" />
+                  Generate PDF Certificate
+                </button>
+              ) : (
+                <PDFDownloadLink
+                  document={
+                    <TypingCertificate
+                      name={fullName.trim().toUpperCase()}
+                      wpm={stats.bestWpm}
+                      accuracy={stats.bestAccuracy}
+                      date={new Date().toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                      verifyId={`TP-PB-${stats.bestWpm}-${stats.bestAccuracy}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`}
+                    />
+                  }
+                  fileName={`tiepit_certificate_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold py-3.5 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10 cursor-pointer"
+                >
+                  {({ loading }) => (
+                    <>
+                      <Download className="w-4 h-4" />
+                      {loading ? 'Assembling PDF...' : 'Download Verified Certificate (PDF)'}
+                    </>
+                  )}
+                </PDFDownloadLink>
+              )}
             </div>
 
             {/* Certificate Preview (HTML/CSS mockup) */}

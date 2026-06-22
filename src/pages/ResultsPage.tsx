@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { TestResult } from '../types';
 import { statsService } from '../services/statsService';
-import { RotateCcw, Award, BookOpen, LayoutDashboard, Target, Zap, Clock, AlertCircle } from 'lucide-react';
+import { RotateCcw, Award, BookOpen, LayoutDashboard, Target, Zap, Clock, AlertCircle, Download } from 'lucide-react';
+import { PDFDownloadLink } from '@react-pdf/renderer';
+import { TypingCertificate } from '../components/TypingCertificate';
 
 export const ResultsPage: React.FC = () => {
   const location = useLocation();
@@ -13,6 +15,14 @@ export const ResultsPage: React.FC = () => {
   const result: TestResult | undefined = location.state?.result || statsService.getHistory()[0];
   const isDaily = location.state?.isDaily || false;
   const overallStats = statsService.getStats();
+
+  const [fullName, setFullName] = useState('');
+  const [isGenerated, setIsGenerated] = useState(false);
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFullName(e.target.value);
+    setIsGenerated(false);
+  };
 
   if (!result) {
     return (
@@ -151,6 +161,76 @@ export const ResultsPage: React.FC = () => {
             <span>{new Date(result.timestamp).toLocaleString()}</span>
           </div>
         </motion.div>
+
+        {/* Certificate Claim Section */}
+        {result.wpm >= 30 && result.accuracy >= 90 && (
+          <motion.div 
+            variants={childVariants} 
+            className="bg-gradient-to-tr from-amber-950/15 to-purple-950/10 border border-amber-500/20 rounded-2xl p-5 mb-10 space-y-4"
+          >
+            <div className="flex items-center gap-2 border-b border-gray-850 pb-2.5">
+              <Award className="w-5 h-5 text-amber-400" />
+              <h3 className="text-sm font-extrabold text-white">Typing Certificate Claim</h3>
+            </div>
+            
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Your performance on this run qualifies you for an official verified certificate of touch-typing proficiency! Enter your name to generate your PDF certificate:
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 items-end">
+              <div className="flex-1 space-y-1">
+                <label className="text-[9px] text-gray-500 font-bold uppercase tracking-wide">Recipient Full Name</label>
+                <input 
+                  type="text" 
+                  value={fullName}
+                  onChange={handleNameChange}
+                  placeholder="e.g. JOHN DOE" 
+                  className="w-full bg-gray-950 border border-gray-850 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white font-semibold outline-none transition-all placeholder:text-gray-700 uppercase"
+                />
+              </div>
+
+              {!isGenerated ? (
+                <button
+                  onClick={() => {
+                    if (!fullName.trim()) {
+                      alert('Please enter your full name first!');
+                      return;
+                    }
+                    setIsGenerated(true);
+                  }}
+                  className="bg-amber-650 hover:bg-amber-500 text-white font-bold px-6 py-3 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10 h-[46px] flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  Generate PDF
+                </button>
+              ) : (
+                <PDFDownloadLink
+                  document={
+                    <TypingCertificate
+                      name={fullName.trim().toUpperCase()}
+                      wpm={result.wpm}
+                      accuracy={result.accuracy}
+                      date={new Date().toLocaleDateString(undefined, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                      verifyId={`TP-RS-${result.wpm}-${result.accuracy}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`}
+                    />
+                  }
+                  fileName={`tiepit_certificate_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`}
+                  className="bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold px-6 py-3.5 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10 h-[46px] flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
+                >
+                  {({ loading }) => (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      {loading ? 'Assembling...' : 'Download Certificate (PDF)'}
+                    </>
+                  )}
+                </PDFDownloadLink>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Action Controls */}
         <motion.div variants={childVariants} className="flex flex-col sm:flex-row gap-4 justify-center">
