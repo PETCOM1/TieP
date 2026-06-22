@@ -123,11 +123,8 @@ const HandVisualizer: React.FC<{ hand: 'left' | 'right'; activeFinger: string }>
   ];
 
   return (
-    <div className="flex flex-col items-center gap-1.5 bg-[#0f1422] border border-gray-800 p-2 md:p-2.5 rounded-2xl shadow-xl w-full max-w-[105px] md:max-w-[115px]">
-      <span className="text-[9px] text-gray-500 font-extrabold uppercase tracking-wider">
-        {isLeft ? 'Left Hand' : 'Right Hand'}
-      </span>
-      <svg width="85" height="75" viewBox="0 0 120 110" className="overflow-visible">
+    <div className="select-none w-[90px] h-[80px] flex items-center justify-center">
+      <svg width="90" height="80" viewBox="0 0 120 110" className="overflow-visible">
         {/* Palm shape */}
         <path
           d={isLeft 
@@ -136,9 +133,25 @@ const HandVisualizer: React.FC<{ hand: 'left' | 'right'; activeFinger: string }>
           }
           fill="none"
           stroke="currentColor"
-          className="text-gray-800/80"
-          strokeWidth="2.5"
+          className="text-gray-700"
+          strokeWidth="3.5"
         />
+
+        {/* Hand letter marker (L/R) in the center of the palm */}
+        <circle
+          cx={isLeft ? 55 : 65}
+          cy={75}
+          r="14"
+          className="fill-gray-950 stroke-gray-700 stroke-2"
+        />
+        <text
+          x={isLeft ? 55 : 65}
+          y={80}
+          textAnchor="middle"
+          className="fill-gray-400 font-sans font-black text-[13px] select-none pointer-events-none"
+        >
+          {isLeft ? 'L' : 'R'}
+        </text>
 
         {/* Fingers */}
         {fingers.map((f) => {
@@ -154,22 +167,22 @@ const HandVisualizer: React.FC<{ hand: 'left' | 'right'; activeFinger: string }>
                 x2={f.tip.x}
                 y2={f.tip.y}
                 stroke="currentColor"
-                strokeWidth={isActive ? "5" : "2.5"}
-                className={isActive ? "text-purple-500 filter drop-shadow-[0_0_6px_rgba(168,85,247,0.6)]" : "text-gray-800"}
+                strokeWidth={isActive ? "6.5" : "3.5"}
+                className={isActive ? "text-purple-500 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]" : "text-gray-700"}
               />
               {/* Joint node */}
               <circle
                 cx={f.knuckle.x}
                 cy={f.knuckle.y}
-                r="3"
-                className={isActive ? "fill-purple-400" : "fill-gray-700"}
+                r="3.5"
+                className={isActive ? "fill-purple-400" : "fill-gray-600"}
               />
               {/* Fingertip dot */}
               <circle
                 cx={f.tip.x}
                 cy={f.tip.y}
-                r={isActive ? "6.5" : "4.5"}
-                className={`${isActive ? "fill-purple-500 stroke-purple-300 stroke-2 filter drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" : "fill-gray-750 stroke-gray-800"} transition-all duration-200`}
+                r={isActive ? "8.5" : "5.5"}
+                className={`${isActive ? "fill-purple-500 stroke-purple-300 stroke-2 filter drop-shadow-[0_0_10px_rgba(168,85,247,0.9)]" : "fill-gray-800 stroke-gray-700"} transition-all duration-200`}
               />
             </g>
           );
@@ -291,49 +304,58 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({ activeKey, exp
   const activeFinger = getFingerForKey(expectedKey);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6 max-w-5xl mx-auto w-full items-center">
-      {/* Keyboard Case / Baseplate - spanning 2 columns on mobile, middle column on desktop */}
-      <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:col-end-3 bg-[#0b0f19] border border-gray-800 p-2.5 md:p-3.5 rounded-2xl w-full shadow-2xl flex flex-col gap-1.5 relative overflow-hidden">
-        {/* Subtle grid baseplate lining */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
+    <div className="flex flex-col gap-4 w-full">
+      {/* Keyboard Container with Absolute Hands on Desktop */}
+      <div className="relative w-full max-w-3xl mx-auto py-2 flex items-center justify-center">
+        {/* Left Hand - absolutely positioned on the left side of the keyboard */}
+        <div className="absolute -left-14 lg:-left-20 top-1/2 -translate-y-1/2 z-20 hidden md:block">
+          <HandVisualizer hand="left" activeFinger={activeFinger} />
+        </div>
 
-        {KEYBOARD_ROWS.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center gap-1 md:gap-1.2 w-full relative z-10">
-            {row.map((key) => {
-              const active = isKeyActive(key.label, key.shiftLabel);
-              const expected = isKeyExpected(key.label, key.shiftLabel);
+        {/* Keyboard Case / Baseplate */}
+        <div className="bg-[#0b0f19] border border-gray-800 p-2.5 md:p-3.5 rounded-2xl w-full shadow-2xl flex flex-col gap-1.5 relative">
+          {/* Subtle grid baseplate lining */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none rounded-2xl" />
 
-              // 3D tactile button classes
-              let keyClass = `h-8.5 md:h-10 rounded-lg flex flex-col items-center justify-center select-none ${key.size} transition-all duration-75 cursor-default `;
+          {KEYBOARD_ROWS.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex justify-center gap-1 md:gap-1.2 w-full relative z-10">
+              {row.map((key) => {
+                const active = isKeyActive(key.label, key.shiftLabel);
+                const expected = isKeyExpected(key.label, key.shiftLabel);
 
-              if (active) {
-                // Key pressed down: moves down, bottom border vanishes, shadow inner
-                keyClass += 'bg-gradient-to-tr from-purple-500 to-indigo-600 text-white translate-y-[3px] border-b-0 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]';
-              } else if (expected) {
-                // Neon glow pulsing keycap
-                keyClass += 'bg-purple-950/20 text-purple-300 border border-purple-500/60 border-b-[3.5px] border-purple-900 shadow-[0_0_12px_rgba(168,85,247,0.3)] animate-pulse';
-              } else {
-                // Standard tactile double-shot keycaps
-                keyClass += 'bg-[#121826] border border-gray-800/80 border-b-[3.5px] border-gray-950 text-gray-400 font-extrabold hover:bg-[#161e30] hover:text-gray-200';
-              }
+                // 3D tactile button classes
+                let keyClass = `h-8.5 md:h-10 rounded-lg flex flex-col items-center justify-center select-none ${key.size} transition-all duration-75 cursor-default `;
 
-              return (
-                <div key={key.code || key.label} className={keyClass}>
-                  {renderKeyContent(key, active)}
-                </div>
-              );
-            })}
-          </div>
-        ))}
+                if (active) {
+                  // Key pressed down
+                  keyClass += 'bg-gradient-to-tr from-purple-500 to-indigo-600 text-white translate-y-[3px] border-b-0 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]';
+                } else if (expected) {
+                  // Neon glow pulsing keycap
+                  keyClass += 'bg-purple-950/20 text-purple-300 border border-purple-500/60 border-b-[3.5px] border-purple-900 shadow-[0_0_12px_rgba(168,85,247,0.3)] animate-pulse';
+                } else {
+                  // Standard tactile double-shot keycaps
+                  keyClass += 'bg-[#121826] border border-gray-800/80 border-b-[3.5px] border-gray-950 text-gray-400 font-extrabold hover:bg-[#161e30] hover:text-gray-200';
+                }
+
+                return (
+                  <div key={key.code || key.label} className={keyClass}>
+                    {renderKeyContent(key, active)}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Right Hand - absolutely positioned on the right side of the keyboard */}
+        <div className="absolute -right-14 lg:-right-20 top-1/2 -translate-y-1/2 z-20 hidden md:block">
+          <HandVisualizer hand="right" activeFinger={activeFinger} />
+        </div>
       </div>
 
-      {/* Left Hand Visualizer - left column on desktop, bottom-left on mobile */}
-      <div className="col-span-1 lg:col-span-1 lg:col-start-1 lg:col-end-2 flex justify-end lg:justify-center">
+      {/* Hands Guide for Mobile - positioned side-by-side underneath */}
+      <div className="flex justify-center gap-8 md:hidden mt-2">
         <HandVisualizer hand="left" activeFinger={activeFinger} />
-      </div>
-
-      {/* Right Hand Visualizer - right column on desktop, bottom-right on mobile */}
-      <div className="col-span-1 lg:col-span-1 lg:col-start-3 lg:col-end-4 flex justify-start lg:justify-center">
         <HandVisualizer hand="right" activeFinger={activeFinger} />
       </div>
     </div>
