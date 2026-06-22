@@ -291,9 +291,9 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({ activeKey, exp
   const activeFinger = getFingerForKey(expectedKey);
 
   return (
-    <div className="flex flex-col gap-4 max-w-3xl mx-auto w-full">
-      {/* Keyboard Case / Baseplate */}
-      <div className="bg-[#0b0f19] border border-gray-800 p-2.5 md:p-3.5 rounded-2xl w-full shadow-2xl flex flex-col gap-1.5 relative overflow-hidden">
+    <div className="grid grid-cols-2 lg:grid-cols-[auto_1fr_auto] gap-4 lg:gap-6 max-w-5xl mx-auto w-full items-center">
+      {/* Keyboard Case / Baseplate - spanning 2 columns on mobile, middle column on desktop */}
+      <div className="col-span-2 lg:col-span-1 lg:col-start-2 lg:col-end-3 bg-[#0b0f19] border border-gray-800 p-2.5 md:p-3.5 rounded-2xl w-full shadow-2xl flex flex-col gap-1.5 relative overflow-hidden">
         {/* Subtle grid baseplate lining */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:10px_10px] pointer-events-none" />
 
@@ -327,9 +327,13 @@ export const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({ activeKey, exp
         ))}
       </div>
 
-      {/* Hand Visualizer Guide */}
-      <div className="flex justify-center gap-8">
+      {/* Left Hand Visualizer - left column on desktop, bottom-left on mobile */}
+      <div className="col-span-1 lg:col-span-1 lg:col-start-1 lg:col-end-2 flex justify-end lg:justify-center">
         <HandVisualizer hand="left" activeFinger={activeFinger} />
+      </div>
+
+      {/* Right Hand Visualizer - right column on desktop, bottom-right on mobile */}
+      <div className="col-span-1 lg:col-span-1 lg:col-start-3 lg:col-end-4 flex justify-start lg:justify-center">
         <HandVisualizer hand="right" activeFinger={activeFinger} />
       </div>
     </div>
