@@ -137,12 +137,15 @@ export function useTypingEngine(
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!isActive || isCompleted) return;
 
-    // Prevent default scrolling for Spacebar and backspace
-    if (e.key === ' ' || e.key === 'Backspace') {
+    // Prevent default scrolling for Spacebar, backspace, and Enter
+    if (e.key === ' ' || e.key === 'Backspace' || e.key === 'Enter') {
       e.preventDefault();
     }
 
     const key = e.key;
+    // Map 'Enter' to '\n' to support multi-line lesson text typing
+    const actualKey = key === 'Enter' ? '\n' : key;
+    
     setLastKeyPressed(key);
 
     // Clear highlight shortly after key press for virtual keyboard
@@ -166,14 +169,14 @@ export function useTypingEngine(
 
     // Check if correct
     const expected = targetTextRef.current[typedText.length];
-    const isCorrect = key === expected;
+    const isCorrect = actualKey === expected;
     if (!isCorrect) {
       setErrors(prev => prev + 1);
     }
     playClickSound(isCorrect ? 'click' : 'error');
 
     setTypedText(prev => {
-      const nextTyped = prev + key;
+      const nextTyped = prev + actualKey;
       
       // Completion check
       if (nextTyped.length === targetTextRef.current.length) {
@@ -185,7 +188,7 @@ export function useTypingEngine(
           onComplete({
             wpm: finalStats.wpm,
             accuracy: finalStats.accuracy,
-            errors: errors + (key !== expected ? 1 : 0),
+            errors: errors + (actualKey !== expected ? 1 : 0),
             timeTaken: finalTime,
             charsTyped: nextTyped.length
           });
