@@ -1,39 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { Keyboard, LayoutDashboard, BookOpen, Award, Play, Gamepad2, Volume2, VolumeX } from 'lucide-react';
-import { audioService } from '../services/audioService';
-import type { SoundType } from '../services/audioService';
+import { Keyboard, LayoutDashboard, BookOpen, Award, Play, Gamepad2 } from 'lucide-react';
 
 export const MainLayout: React.FC = () => {
-  const [muted, setMuted] = useState(() => audioService.isMuted());
-  const [volume, setVolume] = useState(() => audioService.getVolume());
-  const [soundType, setSoundType] = useState(() => audioService.getSoundType());
-  const [showSettings, setShowSettings] = useState(false);
-
-  const toggleMute = () => {
-    const newMuted = !muted;
-    audioService.setMuted(newMuted);
-    setMuted(newMuted);
-    if (!newMuted) audioService.playKey(' ');
-  };
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVol = parseFloat(e.target.value);
-    audioService.setVolume(newVol);
-    setVolume(newVol);
-    if (muted && newVol > 0) {
-      audioService.setMuted(false);
-      setMuted(false);
-    }
-    audioService.playKey(' ');
-  };
-
-  const handleSoundTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const type = e.target.value as SoundType;
-    audioService.setSoundType(type);
-    setSoundType(type);
-    audioService.playKey(' ');
-  };
   return (
     <div className="min-h-screen bg-[#070b13] text-gray-100 font-sans flex flex-col relative">
       {/* Background blur effects */}
@@ -129,83 +98,11 @@ export const MainLayout: React.FC = () => {
             </NavLink>
           </nav>
 
-          {/* User Status & Audio Controls */}
-          <div className="flex items-center gap-3">
-            {/* Audio Settings Panel */}
-            <div className="relative">
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className="w-10 h-10 rounded-xl bg-gray-950/60 border border-gray-800 hover:border-gray-700 flex items-center justify-center text-gray-400 hover:text-white transition-all active:scale-95 cursor-pointer"
-                title="Keypress Audio Settings"
-              >
-                {muted || volume === 0 ? <VolumeX className="w-5 h-5 text-rose-500" /> : <Volume2 className="w-5 h-5 text-purple-400" />}
-              </button>
-
-              {showSettings && (
-                <>
-                  {/* Backdrop overlay to close menu */}
-                  <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
-                  
-                  {/* Dropdown Menu */}
-                  <div className="absolute right-0 mt-3 w-56 bg-gray-900 border border-gray-800 rounded-2xl p-4 shadow-2xl z-50 space-y-4 text-left">
-                    <div className="flex items-center justify-between border-b border-gray-800 pb-2 mb-2">
-                      <span className="text-xs font-bold text-gray-300">Keyboard Audio</span>
-                      <button 
-                        onClick={toggleMute}
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition-colors cursor-pointer border ${
-                          muted 
-                            ? 'bg-rose-950/40 text-rose-400 border-rose-900/30' 
-                            : 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30'
-                        }`}
-                      >
-                        {muted ? 'Muted' : 'Active'}
-                      </button>
-                    </div>
-
-                    {/* Switch Selector */}
-                    <div className="space-y-1.5">
-                      <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Switch Type</label>
-                      <select 
-                        value={soundType}
-                        onChange={handleSoundTypeChange}
-                        className="w-full bg-gray-950 border border-gray-800 rounded-xl px-2.5 py-2 text-xs text-white font-bold outline-none focus:border-purple-500 transition-colors"
-                      >
-                        <option value="blue">🍒 Cherry MX Blue</option>
-                        <option value="brown">🍒 Cherry MX Brown</option>
-                        <option value="typewriter">📜 Vintage Typewriter</option>
-                        <option value="digital">🎛️ Digital Click</option>
-                      </select>
-                    </div>
-
-                    {/* Volume Slider */}
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase tracking-wider">
-                        <span>Volume</span>
-                        <span className="text-purple-400">{Math.round(volume * 100)}%</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={toggleMute} className="text-gray-400 hover:text-white transition-colors cursor-pointer">
-                          {muted || volume === 0 ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4" />}
-                        </button>
-                        <input 
-                          type="range" 
-                          min="0" 
-                          max="1" 
-                          step="0.05"
-                          value={volume}
-                          onChange={handleVolumeChange}
-                          className="w-full h-1 bg-gray-950 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
+          {/* User Status / Quick Start */}
+          <div className="flex items-center">
             <Link
               to="/practice"
-              className="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25 hidden sm:block"
+              className="bg-purple-600 hover:bg-purple-500 active:scale-95 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all duration-200 shadow-lg shadow-purple-500/25"
             >
               Start Typing
             </Link>
