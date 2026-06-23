@@ -99,7 +99,8 @@ export const GamesPage: React.FC = () => {
   const scoreRef = useRef(score);
   scoreRef.current = score;
   const targetIdRef = useRef(targetId);
-  targetIdRef.current = targetId;
+  const wordFallStartTimeRef = useRef(0);
+  const invadersStartTimeRef = useRef(0);
 
   // INVADERS GAME STATE
   const [invGameState, setInvGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
@@ -176,7 +177,8 @@ export const GamesPage: React.FC = () => {
     setWords((prev) => [...prev, newWord]);
 
     const currentScore = scoreRef.current;
-    const interval = Math.max(700, 2200 - currentScore * 45);
+    const elapsedSecs = wordFallStartTimeRef.current > 0 ? (Date.now() - wordFallStartTimeRef.current) / 1000 : 0;
+    const interval = Math.max(600, 2800 - currentScore * 40 - elapsedSecs * 5);
     
     if (spawnTimerRef.current) clearTimeout(spawnTimerRef.current);
     if (gameStateRef.current === 'playing') {
@@ -187,6 +189,7 @@ export const GamesPage: React.FC = () => {
   const startWordFall = () => {
     setGameState('playing');
     gameStateRef.current = 'playing';
+    wordFallStartTimeRef.current = Date.now();
     setWords([]);
     setScore(0);
     setLives(3);
@@ -222,7 +225,8 @@ export const GamesPage: React.FC = () => {
 
     const tick = () => {
       const currentScore = scoreRef.current;
-      const speed = 0.15 + currentScore * 0.008;
+      const elapsedSecs = wordFallStartTimeRef.current > 0 ? (Date.now() - wordFallStartTimeRef.current) / 1000 : 0;
+      const speed = 0.09 + currentScore * 0.006 + elapsedSecs * 0.001;
 
       setWords((prevWords) => {
         let reachedBottomCount = 0;
@@ -347,7 +351,8 @@ export const GamesPage: React.FC = () => {
     setInvaders((prev) => [...prev, newWord]);
 
     const currentScore = invScoreRef.current;
-    const interval = Math.max(800, 2400 - currentScore * 50);
+    const elapsedSecs = invadersStartTimeRef.current > 0 ? (Date.now() - invadersStartTimeRef.current) / 1000 : 0;
+    const interval = Math.max(700, 2700 - currentScore * 45 - elapsedSecs * 4);
     
     if (invSpawnTimerRef.current) clearTimeout(invSpawnTimerRef.current);
     if (invGameStateRef.current === 'playing') {
@@ -358,6 +363,7 @@ export const GamesPage: React.FC = () => {
   const startInvaders = () => {
     setInvGameState('playing');
     invGameStateRef.current = 'playing';
+    invadersStartTimeRef.current = Date.now();
     setInvaders([]);
     setLasers([]);
     setParticles([]);
@@ -395,7 +401,8 @@ export const GamesPage: React.FC = () => {
 
     const tick = () => {
       const currentScore = invScoreRef.current;
-      const speed = 0.12 + currentScore * 0.006;
+      const elapsedSecs = invadersStartTimeRef.current > 0 ? (Date.now() - invadersStartTimeRef.current) / 1000 : 0;
+      const speed = 0.07 + currentScore * 0.004 + elapsedSecs * 0.0008;
 
       // 1. Move Invaders Down
       setInvaders((prevInvaders) => {
