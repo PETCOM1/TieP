@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { playClickSound } from '../utils/audio';
+import { audioService } from '../services/audioService';
 
 interface TypingEngineOptions {
   timerLimit?: number; // in seconds (for timed tests)
@@ -155,7 +156,7 @@ export function useTypingEngine(
 
     if (key === 'Backspace') {
       setTypedText(prev => prev.slice(0, -1));
-      playClickSound('backspace');
+      audioService.playKey('Backspace');
       return;
     }
 
@@ -172,8 +173,9 @@ export function useTypingEngine(
     const isCorrect = actualKey === expected;
     if (!isCorrect) {
       setErrors(prev => prev + 1);
+      playClickSound('error');
     }
-    playClickSound(isCorrect ? 'click' : 'error');
+    audioService.playKey(key);
 
     setTypedText(prev => {
       const nextTyped = prev + actualKey;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playClickSound } from '../utils/audio';
 import { statsService } from '../services/statsService';
+import { audioService } from '../services/audioService';
 import type { GameResult } from '../types';
 import { 
   Play, RotateCcw, Heart, ShieldAlert, Star, Trophy, Target, HelpCircle, 
@@ -279,7 +280,7 @@ export const GamesPage: React.FC = () => {
 
         if (matchingWord) {
           correctKeysPressed.current++;
-          playClickSound('click');
+          audioService.playKey(key);
           setTargetId(matchingWord.id);
           return prevWords.map((word) => {
             if (word.id === matchingWord.id) {
@@ -295,6 +296,7 @@ export const GamesPage: React.FC = () => {
           }).filter((w): w is FallingWord => w !== null);
         } else {
           playClickSound('error');
+          audioService.playKey(key);
           return prevWords;
         }
       }
@@ -308,7 +310,7 @@ export const GamesPage: React.FC = () => {
       const expectedChar = targetWord.text[targetWord.typedLength];
       if (key === expectedChar) {
         correctKeysPressed.current++;
-        playClickSound('click');
+        audioService.playKey(key);
         return prevWords.map((word) => {
           if (word.id === currentTargetId) {
             const nextTypedLen = word.typedLength + 1;
@@ -323,6 +325,7 @@ export const GamesPage: React.FC = () => {
         }).filter((w): w is FallingWord => w !== null);
       } else {
         playClickSound('error');
+        audioService.playKey(key);
         return prevWords;
       }
     });
@@ -497,7 +500,7 @@ export const GamesPage: React.FC = () => {
 
         if (matchingWord) {
           invCorrectKeys.current++;
-          playClickSound('click');
+          audioService.playKey(key);
           setInvTargetId(matchingWord.id);
           return prevInvaders.map((word) => {
             if (word.id === matchingWord.id) {
@@ -527,6 +530,7 @@ export const GamesPage: React.FC = () => {
           }).filter((w): w is FallingWord => w !== null);
         } else {
           playClickSound('error');
+          audioService.playKey(key);
           return prevInvaders;
         }
       }
@@ -540,7 +544,7 @@ export const GamesPage: React.FC = () => {
       const expectedChar = targetWord.text[targetWord.typedLength];
       if (key === expectedChar) {
         invCorrectKeys.current++;
-        playClickSound('click');
+        audioService.playKey(key);
         return prevInvaders.map((word) => {
           if (word.id === currentTargetId) {
             const nextTypedLen = word.typedLength + 1;
@@ -569,6 +573,7 @@ export const GamesPage: React.FC = () => {
         }).filter((w): w is FallingWord => w !== null);
       } else {
         playClickSound('error');
+        audioService.playKey(key);
         return prevInvaders;
       }
     });
