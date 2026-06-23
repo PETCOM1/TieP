@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MOCK_LESSONS } from '../data/lessons';
 import type { LessonDifficulty } from '../types';
@@ -14,6 +14,8 @@ export const LessonsPage: React.FC = () => {
   const completedLessonIds = new Set(
     history.filter((r) => r.mode === 'lesson' && r.refId).map((r) => r.refId)
   );
+  const completedLessonCount = completedLessonIds.size;
+  const totalLessonCount = MOCK_LESSONS.length;
 
   const filteredLessons = activeFilter === 'all' 
     ? MOCK_LESSONS 
@@ -72,6 +74,41 @@ export const LessonsPage: React.FC = () => {
               {filter}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Curriculum Progress Banner */}
+      <div className="bg-gradient-to-tr from-purple-950/20 to-indigo-950/20 border border-purple-500/15 p-5 rounded-2xl backdrop-blur-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-sm font-bold text-gray-200 flex items-center gap-1.5">
+              🎓 {completedLessonCount === totalLessonCount 
+                ? "Congratulations! You are a Graduate!" 
+                : "Path to Graduation Certificate"}
+            </h2>
+            <p className="text-xs text-gray-400">
+              {completedLessonCount === totalLessonCount ? (
+                <span>
+                  You have completed all 12 lessons. Go to your <Link to="/dashboard" className="text-purple-400 hover:underline font-bold">Profile Dashboard</Link> to download your official certificate!
+                </span>
+              ) : (
+                `Complete all ${totalLessonCount} lessons to earn your official Touch-Typing Graduate Certificate.`
+              )}
+            </p>
+          </div>
+          
+          <div className="w-full sm:w-64 shrink-0 space-y-1.5">
+            <div className="flex justify-between text-xs font-bold text-gray-400">
+              <span>Lessons Completed</span>
+              <span className="text-purple-400">{completedLessonCount} / {totalLessonCount}</span>
+            </div>
+            <div className="w-full h-2 bg-gray-950 rounded-full overflow-hidden border border-gray-850">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full transition-all duration-500" 
+                style={{ width: `${Math.round((completedLessonCount / totalLessonCount) * 100)}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 

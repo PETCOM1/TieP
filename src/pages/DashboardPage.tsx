@@ -97,6 +97,8 @@ export const DashboardPage: React.FC = () => {
 
   // Certificate eligibility criteria: WPM >= 30, Accuracy >= 90%
   const isEligibleForCertificate = stats.bestWpm >= 30 && stats.bestAccuracy >= 90;
+  const speedProgress = Math.min(100, Math.round((stats.bestWpm / 30) * 100));
+  const accuracyProgress = Math.min(100, Math.round((stats.bestAccuracy / 90) * 100));
 
   // Graduation certificate eligibility: complete all 12 lessons
   const completedLessonIds = new Set(
@@ -352,24 +354,40 @@ export const DashboardPage: React.FC = () => {
                   </span>
                 )}
               </div>
-
               {!isEligibleForCertificate ? (
                 <div className="py-4 space-y-4">
                   <p className="text-xs text-gray-400 leading-relaxed">
                     Awarded to typists who meet standardized typing speed and accuracy milestones. Requires a personal best of <span className="text-purple-400 font-semibold">30 WPM</span> and <span className="text-indigo-400 font-semibold">90% accuracy</span>.
                   </p>
-                  <div className="bg-gray-950/60 border border-gray-850 p-4 rounded-xl space-y-3">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-gray-400">Speed Status</span>
-                      <span className={stats.bestWpm >= 30 ? "text-emerald-400" : "text-gray-550"}>
-                        {stats.bestWpm} / 30 WPM {stats.bestWpm >= 30 && '✓'}
-                      </span>
+                  <div className="bg-gray-950/60 border border-gray-850 p-4 rounded-xl space-y-4">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-400">Speed Status</span>
+                        <span className={stats.bestWpm >= 30 ? "text-emerald-400" : "text-gray-500"}>
+                          {stats.bestWpm} / 30 WPM {stats.bestWpm >= 30 && '✓'}
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden border border-gray-850">
+                        <div 
+                          className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full" 
+                          style={{ width: `${speedProgress}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-gray-400">Accuracy Status</span>
-                      <span className={stats.bestAccuracy >= 90 ? "text-emerald-400" : "text-gray-550"}>
-                        {stats.bestAccuracy}% / 90% {stats.bestAccuracy >= 90 && '✓'}
-                      </span>
+                    
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-gray-400">Accuracy Status</span>
+                        <span className={stats.bestAccuracy >= 90 ? "text-emerald-400" : "text-gray-500"}>
+                          {stats.bestAccuracy}% / 90% {stats.bestAccuracy >= 90 && '✓'}
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 bg-gray-900 rounded-full overflow-hidden border border-gray-850">
+                        <div 
+                          className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full" 
+                          style={{ width: `${accuracyProgress}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
