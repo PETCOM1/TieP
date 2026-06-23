@@ -8,7 +8,8 @@ import {
   Flame, Calendar, CheckCircle2, Lock, Download, Award as CertificateIcon, ArrowRight
 } from 'lucide-react';
 import { PDFDownloadLink } from '@react-pdf/renderer';
-import { TypingCertificate } from '../components/TypingCertificate';
+import { TypingCertificate, TypingGraduationCertificate } from '../components/TypingCertificate';
+import { MOCK_LESSONS } from '../data/lessons';
 
 export const DashboardPage: React.FC = () => {
   const [stats, setStats] = useState<TypingStats>(statsService.getStats());
@@ -20,15 +21,23 @@ export const DashboardPage: React.FC = () => {
   const [dailyCompleted, setDailyCompleted] = useState(statsService.isDailyChallengeCompletedToday());
   const [dailyResult, setDailyResult] = useState<TestResult | null>(statsService.getDailyChallengeResultToday());
   
-  // Certificate state
+  // Certificate states
   const [fullName, setFullName] = useState('');
-  const [certMessage, setCertMessage] = useState('');
-  const [isGenerated, setIsGenerated] = useState(false);
+  
+  // Proficiency Cert States
+  const [isProficiencyGenerated, setIsProficiencyGenerated] = useState(false);
+  const [proficiencyMessage, setProficiencyMessage] = useState('');
+
+  // Graduation Cert States
+  const [isGraduationGenerated, setIsGraduationGenerated] = useState(false);
+  const [graduationMessage, setGraduationMessage] = useState('');
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFullName(e.target.value);
-    setIsGenerated(false);
-    setCertMessage('');
+    setIsProficiencyGenerated(false);
+    setIsGraduationGenerated(false);
+    setProficiencyMessage('');
+    setGraduationMessage('');
   };
 
   useEffect(() => {
@@ -89,7 +98,13 @@ export const DashboardPage: React.FC = () => {
   // Certificate eligibility criteria: WPM >= 30, Accuracy >= 90%
   const isEligibleForCertificate = stats.bestWpm >= 30 && stats.bestAccuracy >= 90;
 
-  // Function replaced with inline client-side @react-pdf/renderer React component
+  // Graduation certificate eligibility: complete all 12 lessons
+  const completedLessonIds = new Set(
+    history.filter(r => r.mode === 'lesson' && r.refId).map(r => r.refId)
+  );
+  const completedLessonCount = completedLessonIds.size;
+  const totalLessonCount = MOCK_LESSONS.length;
+  const isEligibleForGraduation = completedLessonCount === totalLessonCount;
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -291,126 +306,291 @@ export const DashboardPage: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* Typing Certificate Panel */}
-      <div className="bg-gray-900/30 border border-gray-850 rounded-2xl p-6 relative overflow-hidden backdrop-blur-sm">
-        <h2 className="text-lg font-bold text-white flex items-center gap-2 border-b border-gray-850 pb-3 mb-4">
-          <CertificateIcon className="w-5 h-5 text-amber-500" />
-          Touch-Typing Certificate
-        </h2>
-
-        {!isEligibleForCertificate ? (
-          <div className="flex flex-col md:flex-row items-center gap-6 py-4">
-            <div className="w-16 h-16 rounded-2xl bg-gray-950/60 border border-gray-800 flex items-center justify-center text-gray-600">
-              <Lock className="w-7 h-7" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-gray-300">Certificate Locked</h3>
-              <p className="text-xs text-gray-500 mt-1 leading-relaxed max-w-lg">
-                Achieve a personal best typing speed of <span className="text-purple-400 font-semibold">30 WPM</span> and at least <span className="text-indigo-400 font-semibold">90% accuracy</span> to unlock your official verified certificate of proficiency. Keep practicing!
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
-            
-            {/* Input & instructions */}
-            <div className="space-y-4">
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Congratulations! Your skills meet the standard proficiency levels. Enter your name below to claim and generate your customized verified certificate of proficiency.
-              </p>
-              
-              <div className="space-y-1.5">
-                <label className="text-[10px] text-gray-500 font-bold uppercase tracking-wide">Enter Student Full Name</label>
+      {/* Certificate Section */}
+      <div className="space-y-6">
+        {/* Unified Name Input */}
+        {(isEligibleForCertificate || isEligibleForGraduation) && (
+          <div className="bg-gray-950/40 border border-gray-850 rounded-2xl p-5 backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold text-gray-300 flex items-center gap-1.5">
+                  <Award className="w-4 h-4 text-purple-400" />
+                  Claim Your Official Certificates
+                </h3>
+                <p className="text-xs text-gray-500">Enter your full name to personalize your certificates before generating the downloadable PDFs.</p>
+              </div>
+              <div className="w-full sm:w-72 shrink-0">
                 <input 
                   type="text" 
                   value={fullName}
                   onChange={handleNameChange}
                   placeholder="e.g. JOHN DOE" 
-                  className="w-full bg-gray-950 border border-gray-850 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white font-semibold outline-none transition-all placeholder:text-gray-700 uppercase"
+                  className="w-full bg-gray-900 border border-gray-800 focus:border-purple-500 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-2.5 text-xs text-white font-bold outline-none transition-all placeholder:text-gray-700 uppercase"
                 />
               </div>
-
-              {certMessage && (
-                <p className="text-xs text-rose-400 font-bold">{certMessage}</p>
-              )}
-
-              {!isGenerated ? (
-                <button
-                  onClick={() => {
-                    if (!fullName.trim()) {
-                      setCertMessage('Please enter your full name first!');
-                      return;
-                    }
-                    setIsGenerated(true);
-                    setCertMessage('');
-                  }}
-                  className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3.5 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-purple-500/10 cursor-pointer"
-                >
-                  <CertificateIcon className="w-4 h-4" />
-                  Generate PDF Certificate
-                </button>
-              ) : (
-                <PDFDownloadLink
-                  document={
-                    <TypingCertificate
-                      name={fullName.trim().toUpperCase()}
-                      wpm={stats.bestWpm}
-                      accuracy={stats.bestAccuracy}
-                      date={new Date().toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                      verifyId={`TP-PB-${stats.bestWpm}-${stats.bestAccuracy}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`}
-                    />
-                  }
-                  fileName={`tiepit_certificate_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold py-3.5 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10 cursor-pointer"
-                >
-                  {({ loading }) => (
-                    <>
-                      <Download className="w-4 h-4" />
-                      {loading ? 'Assembling PDF...' : 'Download Verified Certificate (PDF)'}
-                    </>
-                  )}
-                </PDFDownloadLink>
-              )}
             </div>
-
-            {/* Certificate Preview (HTML/CSS mockup) */}
-            <div className="border border-purple-500/20 bg-gray-950/60 rounded-xl p-6 text-center space-y-4 shadow-2xl relative select-none">
-              {/* Corner markings */}
-              <div className="absolute top-2 left-2 w-3 h-3 border-t border-l border-amber-500/40" />
-              <div className="absolute top-2 right-2 w-3 h-3 border-t border-r border-amber-500/40" />
-              <div className="absolute bottom-2 left-2 w-3 h-3 border-b border-l border-amber-500/40" />
-              <div className="absolute bottom-2 right-2 w-3 h-3 border-b border-r border-amber-500/40" />
-
-              <div className="text-[9px] font-black text-gray-500 tracking-widest uppercase">Tie Pit Typing Certificate</div>
-              <div>
-                <span className="text-[10px] text-gray-500 italic block">Awarded to:</span>
-                <span className="text-base font-black text-purple-400 uppercase tracking-wide block min-h-[24px]">
-                  {fullName.trim() ? fullName.slice(0, 24) : 'Your Name'}
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-850/60 py-3.5 max-w-xs mx-auto text-center">
-                <div>
-                  <span className="text-[9px] text-gray-500 font-bold block">SPEED</span>
-                  <span className="text-lg font-black text-amber-500">{stats.bestWpm} WPM</span>
-                </div>
-                <div>
-                  <span className="text-[9px] text-gray-500 font-bold block">ACCURACY</span>
-                  <span className="text-lg font-black text-indigo-400">{stats.bestAccuracy}%</span>
-                </div>
-              </div>
-              <div className="text-[8px] text-gray-600 uppercase font-black tracking-widest flex items-center justify-center gap-1">
-                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Verified Local Record
-              </div>
-            </div>
-
           </div>
         )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          {/* Certificate 1: Proficiency Certificate */}
+          <div className="bg-gray-900/30 border border-gray-850 rounded-2xl p-6 relative overflow-hidden backdrop-blur-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-gray-850 pb-3 mb-4">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Award className="w-4 h-4 text-purple-400" />
+                  Proficiency Certificate
+                </h3>
+                {isEligibleForCertificate ? (
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 border border-emerald-900/30 px-2 py-0.5 rounded-full">
+                    Unlocked
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-gray-500 bg-gray-950/60 border border-gray-850 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" /> Locked
+                  </span>
+                )}
+              </div>
+
+              {!isEligibleForCertificate ? (
+                <div className="py-4 space-y-4">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Awarded to typists who meet standardized typing speed and accuracy milestones. Requires a personal best of <span className="text-purple-400 font-semibold">30 WPM</span> and <span className="text-indigo-400 font-semibold">90% accuracy</span>.
+                  </p>
+                  <div className="bg-gray-950/60 border border-gray-850 p-4 rounded-xl space-y-3">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-gray-400">Speed Status</span>
+                      <span className={stats.bestWpm >= 30 ? "text-emerald-400" : "text-gray-550"}>
+                        {stats.bestWpm} / 30 WPM {stats.bestWpm >= 30 && '✓'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-gray-400">Accuracy Status</span>
+                      <span className={stats.bestAccuracy >= 90 ? "text-emerald-400" : "text-gray-550"}>
+                        {stats.bestAccuracy}% / 90% {stats.bestAccuracy >= 90 && '✓'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-center py-2">
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Your skills meet the touch-typing proficiency standards! Generate your PDF to claim this milestone.
+                    </p>
+                    
+                    {proficiencyMessage && (
+                      <p className="text-xs text-rose-400 font-bold">{proficiencyMessage}</p>
+                    )}
+
+                    {!isProficiencyGenerated ? (
+                      <button
+                        onClick={() => {
+                          if (!fullName.trim()) {
+                            setProficiencyMessage('Please enter your full name first!');
+                            return;
+                          }
+                          setIsProficiencyGenerated(true);
+                          setProficiencyMessage('');
+                        }}
+                        className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-purple-500/10 cursor-pointer"
+                      >
+                        <CertificateIcon className="w-4 h-4" />
+                        Generate Certificate
+                      </button>
+                    ) : (
+                      <PDFDownloadLink
+                        document={
+                          <TypingCertificate
+                            name={fullName.trim().toUpperCase()}
+                            wpm={stats.bestWpm}
+                            accuracy={stats.bestAccuracy}
+                            date={new Date().toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                            verifyId={`TP-PB-${stats.bestWpm}-${stats.bestAccuracy}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`}
+                          />
+                        }
+                        fileName={`tiepit_certificate_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold py-3 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10 cursor-pointer"
+                      >
+                        {({ loading }) => (
+                          <>
+                            <Download className="w-4 h-4" />
+                            {loading ? 'Assembling PDF...' : 'Download Certificate (PDF)'}
+                          </>
+                        )}
+                      </PDFDownloadLink>
+                    )}
+                  </div>
+
+                  {/* HTML Preview Mockup */}
+                  <div className="border border-purple-500/20 bg-gray-950/60 rounded-xl p-4 text-center space-y-3 shadow-2xl relative select-none">
+                    <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t border-l border-amber-500/40" />
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t border-r border-amber-500/40" />
+                    <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b border-l border-amber-500/40" />
+                    <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b border-r border-amber-500/40" />
+
+                    <div className="text-[8px] font-black text-gray-500 tracking-widest uppercase">Tie Pit Proficiency</div>
+                    <div>
+                      <span className="text-[9px] text-gray-500 italic block">Awarded to:</span>
+                      <span className="text-sm font-black text-purple-400 uppercase tracking-wide block min-h-[20px]">
+                        {fullName.trim() ? fullName.slice(0, 18) : 'Your Name'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 border-t border-b border-gray-850/60 py-2 max-w-xs mx-auto text-center">
+                      <div>
+                        <span className="text-[8px] text-gray-500 font-bold block">SPEED</span>
+                        <span className="text-sm font-black text-amber-500">{stats.bestWpm} WPM</span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] text-gray-500 font-bold block">ACCURACY</span>
+                        <span className="text-sm font-black text-indigo-400">{stats.bestAccuracy}%</span>
+                      </div>
+                    </div>
+                    <div className="text-[8px] text-gray-600 uppercase font-black tracking-widest flex items-center justify-center gap-1">
+                      🏆 Verified Record
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Certificate 2: Graduation Certificate */}
+          <div className="bg-gray-900/30 border border-gray-850 rounded-2xl p-6 relative overflow-hidden backdrop-blur-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-gray-850 pb-3 mb-4">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <CertificateIcon className="w-4 h-4 text-amber-500" />
+                  Curriculum Graduation
+                </h3>
+                {isEligibleForGraduation ? (
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/30 border border-emerald-900/30 px-2 py-0.5 rounded-full">
+                    Unlocked
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-gray-500 bg-gray-950/60 border border-gray-850 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" /> Locked
+                  </span>
+                )}
+              </div>
+
+              {!isEligibleForGraduation ? (
+                <div className="py-4 space-y-4">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    Earned by completing all 12 lessons in the touch-typing curriculum. Master layout discipline, finger coordination, and touch-typing layouts.
+                  </p>
+                  
+                  <div className="bg-gray-950/60 border border-gray-850 p-4 rounded-xl space-y-2">
+                    <div className="flex justify-between text-xs font-bold text-gray-400 mb-1">
+                      <span>Curriculum Progress</span>
+                      <span className="text-purple-400">{completedLessonCount} / {totalLessonCount} Lessons</span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-900 rounded-full overflow-hidden border border-gray-850">
+                      <div 
+                        className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full transition-all duration-500" 
+                        style={{ width: `${Math.round((completedLessonCount / totalLessonCount) * 100)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-gray-500 leading-normal">
+                    Go to the <Link to="/lessons" className="text-purple-400 hover:underline font-bold">Lessons tab</Link> to complete all remaining courses.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-center py-2">
+                  <div className="space-y-4">
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Incredible! You completed the entire touch-typing curriculum. Generate your graduation certificate PDF now.
+                    </p>
+                    
+                    {graduationMessage && (
+                      <p className="text-xs text-rose-400 font-bold">{graduationMessage}</p>
+                    )}
+
+                    {!isGraduationGenerated ? (
+                      <button
+                        onClick={() => {
+                          if (!fullName.trim()) {
+                            setGraduationMessage('Please enter your full name first!');
+                            return;
+                          }
+                          setIsGraduationGenerated(true);
+                          setGraduationMessage('');
+                        }}
+                        className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-purple-500/10 cursor-pointer"
+                      >
+                        <CertificateIcon className="w-4 h-4" />
+                        Generate Certificate
+                      </button>
+                    ) : (
+                      <PDFDownloadLink
+                        document={
+                          <TypingGraduationCertificate
+                            name={fullName.trim().toUpperCase()}
+                            bestWpm={stats.bestWpm}
+                            totalLessons={totalLessonCount}
+                            date={new Date().toLocaleDateString(undefined, {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                            verifyId={`TP-GR-${stats.bestWpm}-${totalLessonCount}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`}
+                          />
+                        }
+                        fileName={`tiepit_graduation_certificate_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-tr from-amber-600 to-amber-500 hover:from-amber-500 hover:to-amber-400 text-white font-bold py-3 rounded-xl text-xs transition-all active:scale-95 shadow-lg shadow-amber-500/10 cursor-pointer"
+                      >
+                        {({ loading }) => (
+                          <>
+                            <Download className="w-4 h-4" />
+                            {loading ? 'Assembling PDF...' : 'Download Graduation PDF'}
+                          </>
+                        )}
+                      </PDFDownloadLink>
+                    )}
+                  </div>
+
+                  {/* HTML Preview Mockup */}
+                  <div className="border border-purple-500/20 bg-gray-950/60 rounded-xl p-4 text-center space-y-3 shadow-2xl relative select-none">
+                    <div className="absolute top-1.5 left-1.5 w-2 h-2 border-t border-l border-amber-500/40" />
+                    <div className="absolute top-1.5 right-1.5 w-2 h-2 border-t border-r border-amber-500/40" />
+                    <div className="absolute bottom-1.5 left-1.5 w-2 h-2 border-b border-l border-amber-500/40" />
+                    <div className="absolute bottom-1.5 right-1.5 w-2 h-2 border-b border-r border-amber-500/40" />
+
+                    <div className="text-[8px] font-black text-gray-500 tracking-widest uppercase">Tie Pit Graduation</div>
+                    <div>
+                      <span className="text-[9px] text-gray-500 italic block">Graduated Student:</span>
+                      <span className="text-sm font-black text-purple-400 uppercase tracking-wide block min-h-[20px]">
+                        {fullName.trim() ? fullName.slice(0, 18) : 'Your Name'}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 border-t border-b border-gray-850/60 py-2 max-w-xs mx-auto text-center">
+                      <div>
+                        <span className="text-[8px] text-gray-500 font-bold block">CURRICULUM</span>
+                        <span className="text-sm font-black text-amber-500 font-mono">12 / 12 Lessons</span>
+                      </div>
+                      <div>
+                        <span className="text-[8px] text-gray-500 font-bold block">BEST SPEED</span>
+                        <span className="text-sm font-black text-indigo-400">{stats.bestWpm} WPM</span>
+                      </div>
+                    </div>
+                    <div className="text-[8px] text-gray-600 uppercase font-black tracking-widest flex items-center justify-center gap-1">
+                      🎓 Curriculum Graduate
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+        </div>
       </div>
 
       {/* History and CTA */}

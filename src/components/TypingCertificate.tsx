@@ -249,3 +249,80 @@ export const TypingCertificate: React.FC<CertificateProps> = ({
     </Document>
   );
 };
+
+interface GraduationProps {
+  name: string;
+  bestWpm: number;
+  totalLessons: number;
+  date: string;
+  verifyId: string;
+}
+
+export const TypingGraduationCertificate: React.FC<GraduationProps> = ({
+  name,
+  bestWpm,
+  totalLessons,
+  date,
+  verifyId,
+}) => {
+  return (
+    <Document>
+      <Page size="A4" orientation="landscape" style={styles.page}>
+        <View style={styles.outerBorder}>
+          <View style={styles.innerBorder}>
+            {/* Decorative Corner Accents */}
+            <View style={styles.decorationCornerTL} />
+            <View style={styles.decorationCornerTR} />
+            <View style={styles.decorationCornerBL} />
+            <View style={styles.decorationCornerBR} />
+
+            {/* Header */}
+            <Text style={styles.header}>Tie Pit Typing Academy</Text>
+            
+            {/* Title */}
+            <Text style={styles.title}>Touch-Typing Graduate Certificate</Text>
+            
+            <View style={styles.divider} />
+            
+            {/* Recipient */}
+            <Text style={styles.subtitle}>This is proudly awarded to</Text>
+            <Text style={styles.name}>{name}</Text>
+            
+            {/* Description */}
+            <Text style={styles.description}>
+              for successfully completing the entire touch-typing curriculum, demonstrating excellent layout discipline, finger coordination, and touch-typing mastery.
+            </Text>
+
+            {/* Stats */}
+            <View style={styles.statsBox}>
+              <View style={styles.statCol}>
+                <Text style={styles.statVal}>{totalLessons} / {totalLessons}</Text>
+                <Text style={styles.statLbl}>LESSONS COMPLETED</Text>
+              </View>
+              <View style={styles.statSep} />
+              <View style={styles.statCol}>
+                <Text style={styles.statVal}>{bestWpm} WPM</Text>
+                <Text style={styles.statLbl}>PERSONAL BEST SPEED</Text>
+              </View>
+            </View>
+
+            {/* Seal */}
+            <View style={styles.sealContainer}>
+              <View style={styles.sealCircle}>
+                <Text style={styles.sealText}>🎓</Text>
+                <Text style={styles.sealText}>GRADUATE</Text>
+              </View>
+            </View>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.verifyText}>GRADUATION ID: {verifyId}</Text>
+              <Text style={styles.dateText}>Date: {date}</Text>
+            </View>
+          </View>
+        </View>
+      </Page>
+    </Document>
+  );
+};
+

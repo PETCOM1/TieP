@@ -4,10 +4,16 @@ import { motion } from 'framer-motion';
 import { MOCK_LESSONS } from '../data/lessons';
 import type { LessonDifficulty } from '../types';
 import { Play, BookOpen, Layers } from 'lucide-react';
+import { statsService } from '../services/statsService';
 
 export const LessonsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<'all' | LessonDifficulty>('all');
+  const [history] = useState(() => statsService.getHistory());
+
+  const completedLessonIds = new Set(
+    history.filter((r) => r.mode === 'lesson' && r.refId).map((r) => r.refId)
+  );
 
   const filteredLessons = activeFilter === 'all' 
     ? MOCK_LESSONS 
@@ -87,9 +93,16 @@ export const LessonsPage: React.FC = () => {
             <div>
               {/* Header Badges */}
               <div className="flex items-center justify-between mb-4">
-                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getDifficultyBadgeStyle(lesson.difficulty)}`}>
-                  {lesson.difficulty}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getDifficultyBadgeStyle(lesson.difficulty)}`}>
+                    {lesson.difficulty}
+                  </span>
+                  {completedLessonIds.has(lesson.id) && (
+                    <span className="bg-emerald-950/30 text-emerald-400 border border-emerald-900/30 px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                      ✓ Completed
+                    </span>
+                  )}
+                </div>
                 
                 <span className="text-[10px] text-gray-500 font-semibold flex items-center gap-1">
                   <Layers className="w-3 h-3" />
