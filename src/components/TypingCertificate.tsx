@@ -151,15 +151,15 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    border: '1.5px solid #d97706',
-    backgroundColor: '#fef3c7',
+    border: '1.5px solid #dc2626', // Crimson red border
+    backgroundColor: '#ffe4e6', // Soft rose/red background
     alignItems: 'center',
     justifyContent: 'center',
   },
   sealText: {
     fontSize: 7,
     fontFamily: 'Helvetica-Bold',
-    color: '#b45309',
+    color: '#9f1239', // Deep crimson text
   },
   footer: {
     flexDirection: 'row',
