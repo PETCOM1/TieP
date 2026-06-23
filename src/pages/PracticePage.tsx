@@ -31,6 +31,10 @@ export const PracticePage: React.FC = () => {
   const navigate = useNavigate();
   const lessonId = searchParams.get('lesson');
   const isDaily = searchParams.get('mode') === 'daily';
+  const [history] = useState(() => statsService.getHistory());
+  const isLessonCompleted = lessonId 
+    ? history.some(r => r.mode === 'lesson' && r.refId === lessonId)
+    : false;
 
   const [lessonTitle, setLessonTitle] = useState<string | null>(null);
   const [targetText, setTargetText] = useState('');
@@ -133,10 +137,15 @@ export const PracticePage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-black text-white flex items-center gap-2">
             {lessonTitle ? (
-              <>
+              <div className="flex items-center gap-2 flex-wrap">
                 <BookOpen className="w-5 h-5 text-indigo-400" />
-                Lesson: {lessonTitle}
-              </>
+                <span>Lesson: {lessonTitle}</span>
+                {isLessonCompleted && (
+                  <span className="bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                    ✓ Completed
+                  </span>
+                )}
+              </div>
             ) : (
               <>
                 <Play className="w-5 h-5 text-purple-400" />
